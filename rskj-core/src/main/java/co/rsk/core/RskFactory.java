@@ -21,6 +21,7 @@ package co.rsk.core;
 import co.rsk.config.RskSystemProperties;
 import co.rsk.core.bc.BlockChainImpl;
 import co.rsk.core.bc.TransactionPoolImpl;
+import co.rsk.jsonrpc.JsonRpcSerializer;
 import co.rsk.metrics.HashRateCalculator;
 import co.rsk.mine.MinerClient;
 import co.rsk.mine.MinerServer;
@@ -30,6 +31,7 @@ import co.rsk.net.handler.TxHandler;
 import co.rsk.net.handler.TxHandlerImpl;
 import co.rsk.net.sync.SyncConfiguration;
 import co.rsk.rpc.CorsConfiguration;
+import co.rsk.rpc.EthSubscribeEventEmitter;
 import co.rsk.rpc.Web3RskImpl;
 import co.rsk.rpc.modules.debug.DebugModule;
 import co.rsk.rpc.modules.eth.*;
@@ -54,6 +56,7 @@ import org.ethereum.core.genesis.BlockChainLoader;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.db.ReceiptStore;
+import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.EthereumChannelInitializerFactory;
@@ -210,13 +213,28 @@ public class RskFactory {
     }
 
     @Bean
-    public Web3WebSocketServer getWeb3WebSocketServer(RskSystemProperties rskSystemProperties,
-                                                      JsonRpcWeb3ServerHandler serverHandler) {
+    public Web3WebSocketServer getWeb3WebSocketServer(
+            RskSystemProperties rskSystemProperties,
+            JsonRpcWeb3ServerHandler serverHandler,
+            EthSubscribeEventEmitter emitter,
+            JsonRpcSerializer serializer) {
         return new Web3WebSocketServer(
-            rskSystemProperties.rpcWebSocketBindAddress(),
-            rskSystemProperties.rpcWebSocketPort(),
-            serverHandler
+                rskSystemProperties.rpcWebSocketBindAddress(),
+                rskSystemProperties.rpcWebSocketPort(),
+                serverHandler,
+                emitter,
+                serializer
         );
+    }
+
+    @Bean
+    public EthSubscribeEventEmitter getEthSubscribeEventEmitter(Ethereum ethereum, JsonRpcSerializer serializer) {
+        return new EthSubscribeEventEmitter(ethereum, serializer);
+    }
+
+    @Bean
+    public JsonRpcSerializer getJsonRpcSerializer() {
+        return new JsonRpcSerializer();
     }
 
     @Bean
